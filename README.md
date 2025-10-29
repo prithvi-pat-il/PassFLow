@@ -55,12 +55,6 @@ A comprehensive web application for managing student bus passes with Flask backe
 5. **Access the application**
    Open your browser and go to: `http://127.0.0.1:5000`
 
-## Default Credentials
-
-- **Admin Login**: 
-  - Email: `admin@example.com`
-  - Password: `admin123`
-
 ## Project Structure
 
 ```
