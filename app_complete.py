@@ -216,12 +216,8 @@ def init_db():
                 db.session.add(cfg)
         db.session.commit()
 
-# Run initialization when app is imported (for production)
-if os.environ.get('FLASK_ENV') == 'production':
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Warning: Database initialization skipped: {e}")
+# Database initialization will be handled by init_db.py during deployment
+# For development, initialization happens in the if __name__ == '__main__' block below
 
 # Utility functions
 def login_required(f):
