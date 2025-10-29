@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Routes - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-bus-front"></i> Manage Routes</h2>
+            <a href="{{ url_for('add_route') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add New Route
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list"></i> All Routes</h5>
+            </div>
+            <div class="card-body">
+                {% if routes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Route Name</th>
+                                    <th>Bus Number</th>
+                                    <th>Stops</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for route in routes %}
+                                <tr>
+                                    <td><strong>{{ route.name }}</strong></td>
+                                    <td>{{ route.bus_number }}</td>
+                                    <td>
+                                        {% set stops = route.get_stops() %}
+                                        {% if stops %}
+                                            {{ stops|length }} stops
+                                            <br><small class="text-muted">
+                                                {% for stop in stops[:3] %}
+                                                    {{ stop.name }}{% if not loop.last %}, {% endif %}
+                                                {% endfor %}
+                                                {% if stops|length > 3 %}...{% endif %}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">No stops defined</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ route.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal" 
+                                                    data-bs-target="#routeModal{{ route.id }}">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No routes available. <a href="{{ url_for('add_route') }}">Add the first route</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Route Detail Modals -->
+{% for route in routes %}
+<div class="modal fade" id="routeModal{{ route.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ route.name }} - Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Bus Number:</strong> {{ route.bus_number }}</p>
+                
+                {% set stops = route.get_stops() %}
+                {% if stops %}
+                    <h6>Stops:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for stop in stops %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ stop.name }}</span>
+                            <small class="text-muted">{{ stop.lat }}, {{ stop.lng }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                
+                {% set timings = route.get_timings() %}
+                {% if timings %}
+                    <h6 class="mt-3">Timings:</h6>
+                    <div class="row">
+                        {% for time_key, time_value in timings.items() %}
+                        <div class="col-md-6">
+                            <strong>{{ time_key }}:</strong> {{ time_value }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

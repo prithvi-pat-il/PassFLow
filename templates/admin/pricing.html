@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Pricing - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-currency-rupee"></i> Manage Pricing</h2>
+            <a href="{{ url_for('add_pricing') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Location Pricing
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list"></i> Location-wise Pricing</h5>
+            </div>
+            <div class="card-body">
+                {% if pricing %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Price (₹)</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for price in pricing %}
+                                <tr>
+                                    <td><strong>{{ price.location }}</strong></td>
+                                    <td>₹{{ "%.2f"|format(price.price) }}</td>
+                                    <td>{{ price.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" 
+                                                data-bs-target="#editPriceModal{{ price.id }}">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No pricing set. <a href="{{ url_for('add_pricing') }}">Add the first location</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Pricing Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    <i class="bi bi-lightbulb"></i> <strong>Tips:</strong>
+                </p>
+                <ul class="small text-muted">
+                    <li>Set different prices based on distance from college</li>
+                    <li>Consider transportation costs for each location</li>
+                    <li>Prices are charged per semester</li>
+                    <li>Students will see prices when selecting location</li>
+                </ul>
+                
+                {% if pricing %}
+                <div class="mt-3">
+                    <h6>Quick Stats:</h6>
+                    <p class="mb-1"><strong>Locations:</strong> {{ pricing|length }}</p>
+                    {% set total_price = pricing|sum(attribute='price') %}
+                    {% set avg_price = total_price / pricing|length %}
+                    {% set min_price = pricing|min(attribute='price') %}
+                    {% set max_price = pricing|max(attribute='price') %}
+                    <p class="mb-1"><strong>Avg Price:</strong> ₹{{ "%.2f"|format(avg_price) }}</p>
+                    <p class="mb-0"><strong>Price Range:</strong> ₹{{ "%.2f"|format(min_price.price) }} - ₹{{ "%.2f"|format(max_price.price) }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Edit Price Modals -->
+{% for price in pricing %}
+<div class="modal fade" id="editPriceModal{{ price.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_pricing') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Pricing - {{ price.location }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="location" value="{{ price.location }}">
+                    <div class="mb-3">
+                        <label for="price{{ price.id }}" class="form-label">Price (₹)</label>
+                        <input type="number" step="0.01" class="form-control" id="price{{ price.id }}" 
+                               name="price" value="{{ price.price }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle"></i> Update Price
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

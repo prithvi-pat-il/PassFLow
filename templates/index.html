@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="bi bi-bus-front"></i> PassFlow
+            </h1>
+            <p class="lead text-muted">Streamline your campus transportation with PassFlow</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Student Registration</h5>
+                        <p class="card-text">Register as a new student and manage your bus passes digitally.</p>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-box-arrow-in-right text-success" style="font-size: 3rem;"></i>
+                        <h5 class="card-title mt-3">Already Registered?</h5>
+                        <p class="card-text">Login to access your dashboard and manage your bus passes.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-success">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center mb-4">System Features</h5>
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <i class="bi bi-credit-card text-info" style="font-size: 2rem;"></i>
+                                <p class="mt-2 small">Digital Pass Management</p>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="bi bi-geo-alt text-warning" style="font-size: 2rem;"></i>
+                                <p class="mt-2 small">Route Tracking</p>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="bi bi-cash-coin text-success" style="font-size: 2rem;"></i>
+                                <p class="mt-2 small">Online Payments</p>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="bi bi-shield-check text-primary" style="font-size: 2rem;"></i>
+                                <p class="mt-2 small">Secure & Reliable</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Route Map - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-map"></i> Bus Route Map
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-geo-alt"></i> Interactive Route Map</h5>
+            </div>
+            <div class="card-body">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list"></i> Available Routes</h5>
+            </div>
+            <div class="card-body">
+                {% if routes %}
+                    {% for route in routes %}
+                    <div class="card mb-3 route-card" data-route-id="{{ route.id }}">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ route.name }}</h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-bus-front"></i> Bus: {{ route.bus_number }}
+                                </small>
+                            </p>
+                            {% if route.get_timings() %}
+                            <div class="mt-2">
+                                <small><strong>Timings:</strong></small>
+                                {% for time_key, time_value in route.get_timings().items() %}
+                                    <br><small>{{ time_key }}: {{ time_value }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary mt-2 toggle-route" 
+                                    data-route-id="{{ route.id }}">
+                                <i class="bi bi-eye"></i> Toggle on Map
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No routes available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize map
+const map = L.map('map').setView([18.5204, 73.8567], 12); // Default to Pune coordinates
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Store route layers
+const routeLayers = {};
+const routeColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+
+// Route data from backend
+const routes = [
+    {% for route in routes %}
+    {
+        id: {{ route.id }},
+        name: "{{ route.name }}",
+        bus_number: "{{ route.bus_number }}",
+        stops: {{ route.get_stops()|tojson }},
+        timings: {{ route.get_timings()|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Add routes to map
+routes.forEach((route, index) => {
+    if (route.stops && route.stops.length > 0) {
+        const color = routeColors[index % routeColors.length];
+        const routeGroup = L.layerGroup();
+        
+        // Add stops as markers
+        route.stops.forEach((stop, stopIndex) => {
+            const marker = L.marker([stop.lat, stop.lng])
+                .bindPopup(`
+                    <strong>${stop.name}</strong><br>
+                    Route: ${route.name}<br>
+                    Bus: ${route.bus_number}
+                `);
+            routeGroup.addLayer(marker);
+        });
+        
+        // Add route line if more than one stop
+        if (route.stops.length > 1) {
+            const coordinates = route.stops.map(stop => [stop.lat, stop.lng]);
+            const polyline = L.polyline(coordinates, {
+                color: color,
+                weight: 4,
+                opacity: 0.7
+            }).bindPopup(`Route: ${route.name} (Bus: ${route.bus_number})`);
+            routeGroup.addLayer(polyline);
+        }
+        
+        routeLayers[route.id] = routeGroup;
+        
+        // Add to map by default (you can modify this behavior)
+        routeGroup.addTo(map);
+    }
+});
+
+// Toggle route visibility
+document.querySelectorAll('.toggle-route').forEach(button => {
+    button.addEventListener('click', function() {
+        const routeId = parseInt(this.dataset.routeId);
+        const layer = routeLayers[routeId];
+        
+        if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+            this.innerHTML = '<i class="bi bi-eye-slash"></i> Show on Map';
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-outline-secondary');
+        } else {
+            map.addLayer(layer);
+            this.innerHTML = '<i class="bi bi-eye"></i> Hide from Map';
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-outline-primary');
+        }
+    });
+});
+
+// Fit map to show all routes
+if (routes.length > 0) {
+    const allCoordinates = [];
+    routes.forEach(route => {
+        if (route.stops) {
+            route.stops.forEach(stop => {
+                allCoordinates.push([stop.lat, stop.lng]);
+            });
+        }
+    });
+    
+    if (allCoordinates.length > 0) {
+        const group = new L.featureGroup(Object.values(routeLayers));
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+}
+</script>
+{% endblock %}

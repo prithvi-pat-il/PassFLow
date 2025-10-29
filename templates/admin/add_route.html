@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Add Route - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center bg-success text-white">
+                <h4><i class="bi bi-plus-circle"></i> Add New Route</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Route Name</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="e.g., College to Pune Station" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bus_number" class="form-label">Bus Number</label>
+                                <input type="text" class="form-control" id="bus_number" name="bus_number" 
+                                       placeholder="e.g., MH12AB1234" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="timings" class="form-label">Timings (JSON Format)</label>
+                                <textarea class="form-control" id="timings" name="timings" rows="4"
+                                          placeholder='{"First Bus": "06:00 AM", "Last Bus": "10:00 PM", "Frequency": "Every 30 minutes"}'></textarea>
+                                <div class="form-text">Enter timing information in JSON format</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="stops" class="form-label">Bus Stops (JSON Format)</label>
+                        <textarea class="form-control" id="stops" name="stops" rows="6"
+                                  placeholder='[{"name": "College Main Gate", "lat": 18.5204, "lng": 73.8567}, {"name": "Pune Station", "lat": 18.5314, "lng": 73.8746}]'></textarea>
+                        <div class="form-text">
+                            Enter stops in JSON format with name, latitude, and longitude.<br>
+                            You can get coordinates from <a href="https://www.latlong.net/" target="_blank">LatLong.net</a>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> JSON Format Examples:</h6>
+                        <p class="mb-2"><strong>Stops:</strong></p>
+                        <code style="font-size: 0.8em;">
+                            [{"name": "Stop 1", "lat": 18.5204, "lng": 73.8567}, {"name": "Stop 2", "lat": 18.5314, "lng": 73.8746}]
+                        </code>
+                        <p class="mb-2 mt-2"><strong>Timings:</strong></p>
+                        <code style="font-size: 0.8em;">
+                            {"First Bus": "06:00 AM", "Last Bus": "10:00 PM", "Frequency": "Every 30 min"}
+                        </code>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Add Route
+                        </button>
+                        <a href="{{ url_for('admin_routes') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

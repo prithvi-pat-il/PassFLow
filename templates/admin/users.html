@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-people"></i> Registered Students
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list"></i> All Students</h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Profile Status</th>
+                                    <th>Passes</th>
+                                    <th>Registered</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ user.name }}</strong>
+                                        {% if user.profile.photo %}
+                                            <br><small class="text-muted">
+                                                <i class="bi bi-image"></i> Has photo
+                                            </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.phone }}</td>
+                                    <td>
+                                        {% if user.profile.is_complete %}
+                                            <span class="badge bg-success">Complete</span>
+                                            {% if user.profile.prn %}
+                                                <br><small>PRN: {{ user.profile.prn }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning">Incomplete</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set pass_count = user.passes|length %}
+                                        {% if pass_count > 0 %}
+                                            {{ pass_count }} pass{{ 'es' if pass_count > 1 else '' }}
+                                            <br><small class="text-muted">
+                                                {% set latest_pass = user.passes|selectattr('created_at')|max %}
+                                                Latest: {{ latest_pass.status if latest_pass else 'N/A' }}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">No passes</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" 
+                                                data-bs-target="#userModal{{ user.id }}">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No students registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- User Detail Modals -->
+{% for user in users %}
+<div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ user.name }} - Profile Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        {% if user.profile.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + user.profile.photo) }}" 
+                                 class="profile-img mb-3" alt="Student Photo">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center profile-img mb-3">
+                                <i class="bi bi-person text-muted" style="font-size: 4rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Personal Information</h6>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Phone:</strong> {{ user.phone }}</p>
+                        <p><strong>PRN:</strong> {{ user.profile.prn or 'Not set' }}</p>
+                        <p><strong>Pass Number:</strong> {{ user.profile.pass_no or 'Not generated' }}</p>
+                        
+                        {% if user.profile.is_complete %}
+                        <h6 class="mt-3">Academic Information</h6>
+                        <p><strong>Location:</strong> {{ user.profile.location }}</p>
+                        <p><strong>Semester:</strong> {{ user.profile.semester }}</p>
+                        <p><strong>Semester End:</strong> {{ user.profile.semester_end_date.strftime('%d %b %Y') if user.profile.semester_end_date else 'Not set' }}</p>
+                        <p><strong>Route:</strong> {{ user.profile.route.name if user.profile.route else 'Not selected' }}</p>
+                        <p><strong>Bus Number:</strong> {{ user.profile.bus_number or 'Not set' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if user.passes %}
+                <h6 class="mt-3">Pass History</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Pass ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Expiry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pass in user.passes %}
+                            <tr>
+                                <td>#{{ pass.id }}</td>
+                                <td>₹{{ "%.2f"|format(pass.amount_paid) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if pass.status == 'Approved' else 'warning' if pass.status == 'Pending' else 'danger' }}">
+                                        {{ pass.status }}
+                                    </span>
+                                </td>
+                                <td>{{ pass.created_at.strftime('%d %b %Y') }}</td>
+                                <td>{{ pass.expiry_date.strftime('%d %b %Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

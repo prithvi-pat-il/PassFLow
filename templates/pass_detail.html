@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Pass Details - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center bg-primary text-white">
+                <h4><i class="bi bi-credit-card"></i> Bus Pass Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Student Photo -->
+                    <div class="col-md-4 text-center">
+                        {% if bus_pass.user.profile.photo %}
+                            <img src="{{ url_for('static', filename='uploads/' + bus_pass.user.profile.photo) }}" 
+                                 class="profile-img mb-3" alt="Student Photo">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center profile-img mb-3">
+                                <i class="bi bi-person text-muted" style="font-size: 4rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="text-center">
+                            <span class="badge fs-6
+                                {% if bus_pass.status == 'Approved' %}bg-success
+                                {% elif bus_pass.status == 'Pending' %}bg-warning
+                                {% else %}bg-danger{% endif %}">
+                                {{ bus_pass.status }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Pass Information -->
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p><strong>Student Name:</strong><br>{{ bus_pass.user.name }}</p>
+                                <p><strong>PRN:</strong><br>{{ bus_pass.user.profile.prn or 'N/A' }}</p>
+                                <p><strong>Pass Number:</strong><br>{{ bus_pass.user.profile.pass_no or 'N/A' }}</p>
+                                <p><strong>Location:</strong><br>{{ bus_pass.user.profile.location or 'N/A' }}</p>
+                                <p><strong>Semester:</strong><br>{{ bus_pass.user.profile.semester or 'N/A' }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p><strong>Route:</strong><br>{{ bus_pass.route.name if bus_pass.route else 'N/A' }}</p>
+                                <p><strong>Bus Number:</strong><br>{{ bus_pass.user.profile.bus_number or 'N/A' }}</p>
+                                <p><strong>Amount Paid:</strong><br>₹{{ "%.2f"|format(bus_pass.amount_paid) }}</p>
+                                <p><strong>Issue Date:</strong><br>{{ bus_pass.issue_date.strftime('%d %b %Y') }}</p>
+                                <p><strong>Expiry Date:</strong><br>{{ bus_pass.expiry_date.strftime('%d %b %Y') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pass Validity Check -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        {% if bus_pass.status == 'Approved' %}
+                            {% if bus_pass.expiry_date >= datetime.now().date() %}
+                                <div class="alert alert-success text-center">
+                                    <i class="bi bi-check-circle"></i>
+                                    <strong>Pass is Valid</strong><br>
+                                    Valid until {{ bus_pass.expiry_date.strftime('%d %B %Y') }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger text-center">
+                                    <i class="bi bi-x-circle"></i>
+                                    <strong>Pass Expired</strong><br>
+                                    Expired on {{ bus_pass.expiry_date.strftime('%d %B %Y') }}
+                                </div>
+                            {% endif %}
+                        {% elif bus_pass.status == 'Pending' %}
+                            <div class="alert alert-warning text-center">
+                                <i class="bi bi-clock"></i>
+                                <strong>Awaiting Approval</strong><br>
+                                Your pass is pending admin approval
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger text-center">
+                                <i class="bi bi-x-circle"></i>
+                                <strong>Pass Rejected</strong><br>
+                                Please contact admin for more information
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if not expired and days_until_expiry in [21, 7] %}
+                <!-- Renew Popup Trigger -->
+                <div class="modal fade" id="renewModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Pass Expiry Reminder</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                Your pass will expire in <strong>{{ days_until_expiry }}</strong> days on
+                                <strong>{{ bus_pass.expiry_date.strftime('%d %B %Y') }}</strong>.
+                                Would you like to renew now?
+                            </div>
+                            <div class="modal-footer">
+                                <a href="{{ url_for('create_pass') }}" class="btn btn-success">Renew Now</a>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Later</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                document.addEventListener('DOMContentLoaded', function(){
+                    var modal = new bootstrap.Modal(document.getElementById('renewModal'));
+                    modal.show();
+                });
+                </script>
+                {% endif %}
+                
+                <!-- Payment Information -->
+                {% if bus_pass.payment %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="bi bi-receipt"></i> Payment Information</h6>
+                                <p class="mb-1"><strong>Transaction ID:</strong> {{ bus_pass.payment.transaction_id }}</p>
+                                <p class="mb-1"><strong>Payment Method:</strong> {{ bus_pass.payment.payment_method }}</p>
+                                <p class="mb-0"><strong>Payment Date:</strong> {{ bus_pass.payment.created_at.strftime('%d %b %Y at %I:%M %p') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                    {% if bus_pass.status == 'Approved' %}
+                        <a href="{{ url_for('print_pass', pass_id=bus_pass.id) }}" class="btn btn-success" target="_blank">
+                            <i class="bi bi-printer"></i> Print Pass
+                        </a>
+                    {% endif %}
+                    {% if session.user_role == 'student' %}
+                        <a href="{{ url_for('route_map') }}" class="btn btn-info">
+                            <i class="bi bi-map"></i> View Route Map
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

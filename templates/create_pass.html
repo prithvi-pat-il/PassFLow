@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Create Bus Pass - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-credit-card"></i> Create Bus Pass
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="passForm">
+                    <div class="row">
+                        <!-- Location Selection -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Select Your Location</label>
+                                <select class="form-select" id="location" name="location" required>
+                                    <option value="">Choose your location...</option>
+                                    {% for location in locations %}
+                                    <option value="{{ location }}">{{ location }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Route Selection -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="route_id" class="form-label">Available Routes</label>
+                                <select class="form-select" id="route_id" name="route_id" required disabled>
+                                    <option value="">Select location first...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Route Details Display -->
+                    <div id="routeDetails" class="alert alert-info" style="display: none;">
+                        <h6><i class="bi bi-info-circle"></i> Route Information</h6>
+                        <div id="routeInfo"></div>
+                    </div>
+                    
+                    <!-- Pricing Display -->
+                    <div id="pricingInfo" class="alert alert-success" style="display: none;">
+                        <h6><i class="bi bi-currency-rupee"></i> Pricing Information</h6>
+                        <div id="priceDisplay"></div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                            <i class="bi bi-arrow-right"></i> Proceed to Payment
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationSelect = document.getElementById('location');
+    const routeSelect = document.getElementById('route_id');
+    const routeDetails = document.getElementById('routeDetails');
+    const routeInfo = document.getElementById('routeInfo');
+    const pricingInfo = document.getElementById('pricingInfo');
+    const priceDisplay = document.getElementById('priceDisplay');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Pricing data from backend
+    const pricingData = {
+        {% for location in locations %}
+        "{{ location }}": {{ pricing_data[location] if pricing_data and location in pricing_data else 0 }},
+        {% endfor %}
+    };
+    
+    locationSelect.addEventListener('change', function() {
+        const location = this.value;
+        
+        if (!location) {
+            routeSelect.disabled = true;
+            routeSelect.innerHTML = '<option value="">Select location first...</option>';
+            routeDetails.style.display = 'none';
+            pricingInfo.style.display = 'none';
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // Show pricing for location
+        showPricingForLocation(location);
+        
+        // Fetch routes for selected location
+        fetch(`/api/routes_by_location/${encodeURIComponent(location)}`)
+            .then(response => response.json())
+            .then(routes => {
+                routeSelect.innerHTML = '<option value="">Choose a route...</option>';
+                
+                if (routes.length === 0) {
+                    routeSelect.innerHTML = '<option value="">No routes available for this location</option>';
+                    routeSelect.disabled = true;
+                } else {
+                    routes.forEach(route => {
+                        const option = document.createElement('option');
+                        option.value = route.id;
+                        option.textContent = `${route.name} (${route.bus_number})`;
+                        routeSelect.appendChild(option);
+                    });
+                    routeSelect.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching routes:', error);
+                routeSelect.innerHTML = '<option value="">Error loading routes</option>';
+                routeSelect.disabled = true;
+            });
+    });
+    
+    routeSelect.addEventListener('change', function() {
+        const routeId = this.value;
+        const location = locationSelect.value;
+        
+        if (!routeId || !location) {
+            routeDetails.style.display = 'none';
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        // Fetch route details
+        fetch(`/api/routes_by_location/${encodeURIComponent(location)}`)
+            .then(response => response.json())
+            .then(routes => {
+                const selectedRoute = routes.find(r => r.id == routeId);
+                if (selectedRoute) {
+                    showRouteDetails(selectedRoute);
+                    submitBtn.disabled = false;
+                }
+            });
+    });
+    
+    function showPricingForLocation(location) {
+        const price = pricingData[location] || 0;
+        if (price > 0) {
+            priceDisplay.innerHTML = `
+                <p class="mb-1"><strong>Monthly Fee:</strong> ₹${price.toFixed(2)}</p>
+                <p class="mb-0"><strong>Valid Until:</strong> {{ profile.semester_end_date.strftime('%d %b %Y') if profile.semester_end_date else 'Semester End' }}</p>
+            `;
+            pricingInfo.style.display = 'block';
+        } else {
+            pricingInfo.style.display = 'none';
+        }
+    }
+    
+    function showRouteDetails(route) {
+        const stopsHtml = route.stops.map(stop => 
+            `<span class="badge bg-secondary me-1 mb-1">${stop.name}</span>`
+        ).join('');
+        
+        routeInfo.innerHTML = `
+            <p class="mb-1"><strong>Bus Number:</strong> ${route.bus_number}</p>
+            <p class="mb-1"><strong>Total Stops:</strong> ${route.stops.length}</p>
+            <p class="mb-0"><strong>Route Stops:</strong><br>${stopsHtml}</p>
+        `;
+        routeDetails.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

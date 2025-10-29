@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-shield-check"></i> Admin Dashboard
+            <span class="text-muted small">System Management</span>
+        </h2>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <i class="bi bi-people" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ total_users }}</h3>
+                <p class="mb-0">Total Students</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center bg-warning text-dark">
+            <div class="card-body">
+                <i class="bi bi-clock" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ pending_passes }}</h3>
+                <p class="mb-0">Pending Approvals</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <i class="bi bi-currency-rupee" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">₹{{ "%.2f"|format(total_revenue) }}</h3>
+                <p class="mb-0">Total Revenue</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <i class="bi bi-credit-card" style="font-size: 2rem;"></i>
+                <h3 class="mt-2">{{ recent_passes|length }}</h3>
+                <p class="mb-0">Recent Passes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-clock"></i> Pending Pass Approvals</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Route</th>
+                                    <th>Amount</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pass in pending_payments %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ pass.user.name }}</strong><br>
+                                        <small class="text-muted">{{ pass.user.email }}</small>
+                                    </td>
+                                    <td>{{ pass.route.name if pass.route else 'N/A' }}</td>
+                                    <td>₹{{ "%.2f"|format(pass.amount_paid) }}</td>
+                                    <td>{{ pass.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('approve_pass', pass_id=pass.id) }}" 
+                                               class="btn btn-success btn-sm"
+                                               onclick="return confirm('Approve this pass?')">
+                                                <i class="bi bi-check"></i>
+                                            </a>
+                                            <a href="{{ url_for('reject_pass', pass_id=pass.id) }}" 
+                                               class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Reject this pass?')">
+                                                <i class="bi bi-x"></i>
+                                            </a>
+                                            <a href="{{ url_for('pass_detail', pass_id=pass.id) }}" 
+                                               class="btn btn-info btn-sm">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No pending approvals.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_routes') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-bus-front"></i> Manage Routes
+                    </a>
+                    <a href="{{ url_for('admin_pricing') }}" class="btn btn-outline-success">
+                        <i class="bi bi-currency-rupee"></i> Manage Pricing
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-outline-info">
+                        <i class="bi bi-people"></i> View Users
+                    </a>
+                    <a href="{{ url_for('admin_payments') }}" class="btn btn-outline-warning">
+                        <i class="bi bi-receipt"></i> Payment Records
+                    </a>
+                    <a href="{{ url_for('import_excel_data') }}" class="btn btn-outline-secondary"
+                       onclick="return confirm('This will replace all existing routes and pricing data. Continue?')">
+                        <i class="bi bi-file-earmark-excel"></i> Import Excel Data
+                    </a>
+                    <a href="{{ url_for('data_management') }}" class="btn btn-outline-dark">
+                        <i class="bi bi-database"></i> Data Management
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="bi bi-activity"></i> Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_passes %}
+                    {% for pass in recent_passes %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <small><strong>{{ pass.user.name }}</strong></small><br>
+                            <small class="text-muted">{{ pass.created_at.strftime('%d %b') }}</small>
+                        </div>
+                        <span class="badge bg-{{ 'success' if pass.status == 'Approved' else 'warning' if pass.status == 'Pending' else 'danger' }}">
+                            {{ pass.status }}
+                        </span>
+                    </div>
+                    {% if not loop.last %}<hr class="my-2">{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">No recent activity.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

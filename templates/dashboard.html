@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="bi bi-speedometer2"></i> Student Dashboard
+            <span class="text-muted small">Welcome, {{ user.name }}!</span>
+        </h2>
+    </div>
+</div>
+
+{% if not profile.is_complete %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Profile Incomplete!</strong> Please complete your profile to create bus passes.
+            <a href="{{ url_for('complete_profile') }}" class="btn btn-sm btn-warning ms-2">Complete Profile</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Location-wise Pricing -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-geo-alt"></i> Location-wise Pricing</h5>
+            </div>
+            <div class="card-body">
+                {% if pricing %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for location, price in pricing.items() %}
+                                <tr {% if profile.location == location %}class="table-primary"{% endif %}>
+                                    <td>{{ location }}</td>
+                                    <td>₹{{ "%.2f"|format(price) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No pricing information available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bus Routes & Timings -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bus-front"></i> Bus Routes & Timings</h5>
+            </div>
+            <div class="card-body">
+                {% if routes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Bus No.</th>
+                                    <th>Route</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for route in routes %}
+                                <tr {% if profile.route_id == route.id %}class="table-primary"{% endif %}>
+                                    <td>{{ route.bus_number }}</td>
+                                    <td>{{ route.name }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No routes available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Pass Details -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-credit-card"></i> Latest Pass Details</h5>
+            </div>
+            <div class="card-body">
+                {% if latest_pass %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Pass ID:</strong> #{{ latest_pass.id }}</p>
+                            <p><strong>Route:</strong> {{ latest_pass.route.name if latest_pass.route else 'N/A' }}</p>
+                            <p><strong>Amount:</strong> ₹{{ "%.2f"|format(latest_pass.amount_paid) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Issue Date:</strong> {{ latest_pass.issue_date.strftime('%d %b %Y') }}</p>
+                            <p><strong>Expiry Date:</strong> {{ latest_pass.expiry_date.strftime('%d %b %Y') }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge 
+                                    {% if latest_pass.status == 'Approved' %}bg-success
+                                    {% elif latest_pass.status == 'Pending' %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ latest_pass.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('pass_detail', pass_id=latest_pass.id) }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> View Details
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No bus pass found.</p>
+                    {% if profile.is_complete %}
+                        <a href="{{ url_for('create_pass') }}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Create New Pass
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if latest_pass and days_until_expiry in [21, 7] %}
+<!-- Renew Reminder Modal -->
+<div class="modal fade" id="renewModalDashboard" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pass Expiry Reminder</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Your latest pass will expire in <strong>{{ days_until_expiry }}</strong> days on 
+        <strong>{{ latest_pass.expiry_date.strftime('%d %B %Y') }}</strong>.
+      </div>
+      <div class="modal-footer">
+        <a href="{{ url_for('create_pass') }}" class="btn btn-success">Renew Now</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Later</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var modal = new bootstrap.Modal(document.getElementById('renewModalDashboard'));
+  modal.show();
+});
+</script>
+{% endif %}
+
+<!-- Quick Actions -->
+{% if profile.is_complete %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('create_pass') }}" class="btn btn-success w-100">
+                            <i class="bi bi-plus-circle"></i><br>Create Pass
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('route_map') }}" class="btn btn-info w-100">
+                            <i class="bi bi-map"></i><br>Route Map
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('complete_profile') }}" class="btn btn-warning w-100">
+                            <i class="bi bi-person-gear"></i><br>Edit Profile
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('change_password') }}" class="btn btn-secondary w-100">
+                            <i class="bi bi-key"></i><br>Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

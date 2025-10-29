@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Profile - PassFlow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-center bg-info text-white">
+                <h4><i class="bi bi-person-gear"></i> Complete Your Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="prn" class="form-label">PRN (Student ID)</label>
+                                <input type="text" class="form-control" id="prn" name="prn" 
+                                       value="{{ profile.prn or '' }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <select class="form-select" id="location" name="location" required>
+                                    <option value="">Select Location</option>
+                                    {% for price in pricing %}
+                                        <option value="{{ price.location }}" 
+                                                {% if profile.location == price.location %}selected{% endif %}>
+                                            {{ price.location }} - ₹{{ "%.2f"|format(price.price) }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">Current Semester</label>
+                                <input type="text" class="form-control" id="semester" name="semester" 
+                                       value="{{ profile.semester or '' }}" placeholder="e.g., Semester 5" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="semester_end_date" class="form-label">Semester End Date</label>
+                                <input type="date" class="form-control" id="semester_end_date" name="semester_end_date" 
+                                       value="{{ profile.semester_end_date.strftime('%Y-%m-%d') if profile.semester_end_date else '' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="route_id" class="form-label">Bus Route</label>
+                                <select class="form-select" id="route_id" name="route_id" required>
+                                    <option value="">Select Route</option>
+                                    {% for route in routes %}
+                                        <option value="{{ route.id }}" 
+                                                {% if profile.route_id == route.id %}selected{% endif %}>
+                                            {{ route.name }} (Bus: {{ route.bus_number }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bus_number" class="form-label">Bus Number</label>
+                                <input type="text" class="form-control" id="bus_number" name="bus_number" 
+                                       value="{{ profile.bus_number or '' }}" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="photo" class="form-label">Profile Photo</label>
+                                <input type="file" class="form-control" id="photo" name="photo" 
+                                       accept="image/*" {% if not profile.photo %}required{% endif %}>
+                                <div class="form-text">Maximum size: 16MB. Image will be resized to 600x600.</div>
+                            </div>
+                            
+                            {% if profile.photo %}
+                            <div class="mb-3">
+                                <label class="form-label">Current Photo</label>
+                                <div>
+                                    <img src="{{ url_for('static', filename='uploads/' + profile.photo) }}" 
+                                         class="profile-img" alt="Profile Photo">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if profile.pass_no %}
+                    <div class="alert alert-info">
+                        <strong>Auto-generated Pass Number:</strong> {{ profile.pass_no }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-info">
+                            <i class="bi bi-check-circle"></i> 
+                            {% if profile.is_complete %}Update Profile{% else %}Complete Profile{% endif %}
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-fill bus number when route is selected
+document.getElementById('route_id').addEventListener('change', function() {
+    const routeSelect = this;
+    const busNumberInput = document.getElementById('bus_number');
+    
+    if (routeSelect.value) {
+        const selectedOption = routeSelect.options[routeSelect.selectedIndex];
+        const busNumber = selectedOption.text.match(/Bus: (.+)\)/);
+        if (busNumber) {
+            busNumberInput.value = busNumber[1];
+        }
+    } else {
+        busNumberInput.value = '';
+    }
+});
+</script>
+{% endblock %}

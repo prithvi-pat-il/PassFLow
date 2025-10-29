@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Add Pricing - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header text-center bg-success text-white">
+                <h4><i class="bi bi-plus-circle"></i> Add Location Pricing</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location Name</label>
+                        <input type="text" class="form-control" id="location" name="location" 
+                               placeholder="e.g., Kothrud, Deccan, Shivajinagar" required>
+                        <div class="form-text">Enter the area/locality name</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price (₹)</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="price" name="price" 
+                               placeholder="e.g., 1500.00" required>
+                        <div class="form-text">Price for the entire semester</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> If the location already exists, the price will be updated.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Add/Update Pricing
+                        </button>
+                        <a href="{{ url_for('admin_pricing') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

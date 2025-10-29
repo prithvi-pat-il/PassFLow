@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Pass - {{ user.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                font-family: Arial, sans-serif;
+                background: white;
+                color: black;
+            }
+            
+            .pass-container {
+                border: 3px solid #2c3e50;
+                border-radius: 15px;
+                padding: 20px;
+                margin: 0 auto;
+                width: 85mm;
+                height: 54mm;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                position: relative;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 20px;
+            color: #333;
+        }
+        
+        .print-instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+        }
+        
+        .pass-container {
+            border: 3px solid #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 320px;
+            height: 200px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            position: relative;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pass-header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .pass-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .pass-subtitle {
+            font-size: 10px;
+            color: #7f8c8d;
+            margin: 2px 0 0 0;
+        }
+        
+        .pass-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex: 1;
+        }
+        
+        .student-info {
+            flex: 1;
+        }
+        
+        .student-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #3498db;
+            object-fit: cover;
+            margin-bottom: 8px;
+        }
+        
+        .info-item {
+            font-size: 9px;
+            margin: 3px 0;
+            color: #2c3e50;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .qr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 15px;
+        }
+        
+        .qr-code {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        .qr-label {
+            font-size: 7px;
+            color: #7f8c8d;
+            margin-top: 3px;
+            text-align: center;
+        }
+        
+        .pass-footer {
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #bdc3c7;
+        }
+        
+        .validity-info {
+            font-size: 8px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .pass-number {
+            font-size: 7px;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 7px;
+            font-weight: bold;
+        }
+        
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .print-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px;
+        }
+        
+        .print-btn:hover {
+            background: #2980b9;
+        }
+        
+        .back-btn {
+            background: #95a5a6;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 10px;
+        }
+        
+        .back-btn:hover {
+            background: #7f8c8d;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 24px;
+            color: rgba(52, 152, 219, 0.1);
+            font-weight: bold;
+            z-index: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <div class="print-instructions">
+            <h4>Print Instructions</h4>
+            <p>1. Make sure your printer is set to A4 size</p>
+            <p>2. Use high-quality paper (180gsm recommended)</p>
+            <p>3. Print in color for best results</p>
+            <p>4. Cut along the border if needed</p>
+        </div>
+        <div style="text-align: center;">
+            <button class="print-btn" onclick="window.print()">🖨️ Print Pass</button>
+            <a href="{{ url_for('pass_detail', pass_id=bus_pass.id) }}" class="back-btn">← Back to Details</a>
+        </div>
+    </div>
+
+    <div class="pass-container">
+        <div class="watermark">PassFlow</div>
+        
+        <div class="status-badge status-{{ bus_pass.status.lower() }}">
+            {{ bus_pass.status.upper() }}
+        </div>
+        
+        <div class="pass-header">
+            <h3 class="pass-title">STUDENT BUS PASS</h3>
+            <p class="pass-subtitle">Valid for Public Transportation</p>
+        </div>
+        
+        <div class="pass-content">
+            <div class="student-info">
+                {% if user.profile.photo %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.profile.photo) }}" alt="Student Photo" class="student-photo">
+                {% else %}
+                    <div class="student-photo" style="background: #ecf0f1; display: flex; align-items: center; justify-content: center; color: #bdc3c7;">
+                        👤
+                    </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <span class="info-label">Name:</span> {{ user.name }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">PRN:</span> {{ user.profile.prn or 'Not Set' }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Phone:</span> {{ user.phone }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Route:</span> {{ bus_pass.route.name if bus_pass.route else 'N/A' }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Bus No:</span> {{ bus_pass.route.bus_number if bus_pass.route else 'N/A' }}
+                </div>
+            </div>
+            
+            <div class="qr-section">
+                <img src="{{ qr_code_data }}" alt="QR Code" class="qr-code">
+                <div class="qr-label">Scan for Verification</div>
+            </div>
+        </div>
+        
+        <div class="pass-footer">
+            <div class="validity-info">
+                Valid: {{ bus_pass.issue_date.strftime('%d/%m/%Y') }} - {{ bus_pass.expiry_date.strftime('%d/%m/%Y') }}
+            </div>
+            <div class="pass-number">
+                Pass No: {{ user.profile.pass_no }} | Amount: ₹{{ "%.2f"|format(bus_pass.amount_paid) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <p style="color: #7f8c8d; font-size: 12px;">
+            Keep this pass with you while traveling. Show to conductor when requested.
+        </p>
+        <button class="print-btn" onclick="window.print()">🖨️ Print Again</button>
+    </div>
+</body>
+</html>
