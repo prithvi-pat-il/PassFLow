@@ -40,56 +40,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
-# Initialize database on startup (for production deployments)
-def init_db():
-    """Initialize database tables and default data"""
-    with app.app_context():
-        db.create_all()
-        # Create default admin user if not exists
-        admin = User.query.filter_by(email='admin@example.com').first()
-        if not admin:
-            admin_password = bcrypt.generate_password_hash('admin123').decode('utf-8')
-            admin = User(
-                name='Administrator',
-                email='admin@example.com',
-                phone='1234567890',
-                password=admin_password,
-                role='admin'
-            )
-            db.session.add(admin)
-            db.session.commit()
-        # Ensure default alert configurations exist
-        defaults = [
-            ("3 Weeks Before Expiry", 21),
-            ("1 Week Before Expiry", 7),
-        ]
-        for name, days in defaults:
-            cfg = AlertConfiguration.query.filter_by(days_before=days).first()
-            if not cfg:
-                cfg = AlertConfiguration(
-                    name=name,
-                    days_before=days,
-                    email_template=(
-                        "Hello {name}, your bus pass ({pass_no}) for {route_name} "
-                        "expires on {expiry_date} (in {days_until_expiry} days). "
-                        "Please renew to avoid interruption."
-                    ),
-                    sms_template=(
-                        "Bus Pass {pass_no} expires in {days_until_expiry} days (on {expiry_date}). "
-                        "Renew soon."
-                    ),
-                    is_active=True
-                )
-                db.session.add(cfg)
-        db.session.commit()
-
-# Run initialization when app is imported (for production)
-if os.environ.get('FLASK_ENV') == 'production' or not os.path.exists('bus_pass_system.db'):
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Warning: Database initialization skipped: {e}")
-
 # Template context
 @app.context_processor
 def inject_datetime():
@@ -222,6 +172,56 @@ class NotificationLog(db.Model):
     user = db.relationship('User', backref='notifications')
     bus_pass = db.relationship('Pass', backref='notifications')
     alert_config = db.relationship('AlertConfiguration', backref='notifications')
+
+# Initialize database on startup (for production deployments)
+def init_db():
+    """Initialize database tables and default data"""
+    with app.app_context():
+        db.create_all()
+        # Create default admin user if not exists
+        admin = User.query.filter_by(email='admin@example.com').first()
+        if not admin:
+            admin_password = bcrypt.generate_password_hash('admin123').decode('utf-8')
+            admin = User(
+                name='Administrator',
+                email='admin@example.com',
+                phone='1234567890',
+                password=admin_password,
+                role='admin'
+            )
+            db.session.add(admin)
+            db.session.commit()
+        # Ensure default alert configurations exist
+        defaults = [
+            ("3 Weeks Before Expiry", 21),
+            ("1 Week Before Expiry", 7),
+        ]
+        for name, days in defaults:
+            cfg = AlertConfiguration.query.filter_by(days_before=days).first()
+            if not cfg:
+                cfg = AlertConfiguration(
+                    name=name,
+                    days_before=days,
+                    email_template=(
+                        "Hello {name}, your bus pass ({pass_no}) for {route_name} "
+                        "expires on {expiry_date} (in {days_until_expiry} days). "
+                        "Please renew to avoid interruption."
+                    ),
+                    sms_template=(
+                        "Bus Pass {pass_no} expires in {days_until_expiry} days (on {expiry_date}). "
+                        "Renew soon."
+                    ),
+                    is_active=True
+                )
+                db.session.add(cfg)
+        db.session.commit()
+
+# Run initialization when app is imported (for production)
+if os.environ.get('FLASK_ENV') == 'production':
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Warning: Database initialization skipped: {e}")
 
 # Utility functions
 def login_required(f):
