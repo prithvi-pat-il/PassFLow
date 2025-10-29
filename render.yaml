@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: bus-pass-system
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: python init_db.py
+    startCommand: gunicorn app_complete:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      # Optional Twilio settings for real SMS sending
+      - key: TWILIO_ACCOUNT_SID
+        value: ""
+      - key: TWILIO_AUTH_TOKEN
+        value: ""
+      - key: TWILIO_FROM
+        value: ""
+
