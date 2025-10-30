@@ -1,114 +1,97 @@
-# Simple Workflow - PassFlow Bus Pass System
+# PassFlow System - Merged Workflow
 
-## User Flow
-
-```
-START
-  ↓
-Register (New User)
-  ↓
-Login
-  ↓
-Complete Profile
-  ↓
-Create Pass
-  ↓
-Make Payment
-  ↓
-Receive Pass
-  ↓
-FINISH
-```
-
----
-
-## Admin Flow
+## Complete Workflow (User + Admin Combined)
 
 ```
-START
-  ↓
-Login
-  ↓
-Dashboard
-  ↓
-Approve Passes
-  ↓
-Manage System
-  ↓
-FINISH
-```
-
----
-
-## Combined Flow Diagram
-
-```
-                    NEW USER
-                        ↓
-                  ┌─────────────┐
-                  │   Register  │
-                  └─────────────┘
-                        ↓
-                  ┌─────────────┐
-                  │    Login    │
-                  └─────────────┘
-                        ↓
-                  ┌─────────────┐
-                  │   Profile   │
-                  └─────────────┘
-                        ↓
-                  ┌─────────────┐
-                  │ Create Pass │
-                  └─────────────┘
-                        ↓
-                  ┌─────────────┐
-                  │   Payment   │
-                  └─────────────┘
-                        ↓
-                  ┌─────────────┐
-                  │ Get Pass    │
-                  └─────────────┘
-                        ↓
-                    DONE
-
-        ADMIN
-           ↓
-     ┌─────────────┐
-     │    Login    │
-     └─────────────┘
-           ↓
-     ┌─────────────┐
-     │  Dashboard  │
-     └─────────────┘
-           ↓
-     ┌─────────────┐
-     │  Approve    │
-     └─────────────┘
-           ↓
-        DONE
+┌──────────────────────────────────────────┐
+│              START                        │
+└──────────────────────────────────────────┘
+                    ↓
+        ┌───────────────────────────┐
+        │   Welcome to PassFlow     │
+        └───────────────────────────┘
+                    ↓
+        ┌───────────────────────────┐
+        │    Check if New User?     │◄──┐
+        └───────────────────────────┘   │
+              YES ↙      ↘ NO           │
+    ┌──────────────┐   ┌─────────────┐  │
+    │   Register   │   │    Login    │  │
+    │  (New User)  │   └─────────────┘  │
+    └──────────────┘         ↓          │
+              ↓        ┌──────────────┐  │
+              └───────→│    Login     │──┤
+                       └──────────────┘  │
+                              ↓          │
+                    ┌──────────────────┐ │
+                    │  What is your    │ │
+                    │      Role?       │ │
+                    └──────────────────┘ │
+                  STUDENT ↙    ↘ ADMIN  │
+        ┌──────────────┐   ┌─────────────┐
+        │  Student     │   │  Admin      │
+        │  Dashboard   │   │  Dashboard  │
+        └──────────────┘   └─────────────┘
+              ↓                   ↓
+    ┌──────────────────┐  ┌─────────────┐
+    │ Complete Profile │  │ Approve     │
+    │   (First Time?)  │  │ Passes      │
+    └──────────────────┘  └─────────────┘
+              ↓                   ↓
+      ┌───────────────┐   ┌─────────────┐
+      │  Create Pass  │   │  Manage     │
+      └───────────────┘   │  System     │
+              ↓           └─────────────┘
+      ┌───────────────┐          ↓
+      │ Make Payment  │  ┌─────────────┐
+      └───────────────┘  │   Monitor   │
+              ↓          │   Revenue   │
+      ┌───────────────┐  └─────────────┘
+      │ Receive Pass  │          ↓
+      └───────────────┘          │
+              ↓                  │
+    ┌──────────────────┐         │
+    │ Check for Expiry │         │
+    │   Alerts         │         │
+    └──────────────────┘         │
+              ↓                  │
+    ┌──────────────────┐         │
+    │  Still Active?   │         │
+    └──────────────────┘         │
+      YES ↙    ↘ NO              │
+   ┌────────┐ ┌──────────────┐   │
+   │ Use Bus│ │  Renew Pass  │───┘
+   │ Service│ └──────────────┘
+   └────────┘
+        ↓
+┌──────────────────────────────────────────┐
+│              FINISH                       │
+└──────────────────────────────────────────┘
 ```
 
 ---
 
-## Simple Process
+## Quick Reference
 
-**User Steps:**
-1. Register
-2. Login
-3. Complete Profile
-4. Create Pass
-5. Make Payment
-6. Get Pass
+**User Path:**
+1. Register (if new) → Login → Complete Profile
+2. Create Pass → Make Payment → Receive Pass
+3. Use Bus Service → Renew when needed
 
-**Admin Steps:**
-1. Login
-2. View Dashboard
-3. Approve Passes
-4. Manage System
+**Admin Path:**
+1. Login → Dashboard
+2. Approve Passes → Manage System → Monitor Revenue
 
 ---
 
-## That's It!
+## Key Decision Points
 
-Simple, straightforward, done. ✅
+- **New User?** → Register first
+- **Returning User?** → Login directly
+- **Role?** → Student or Admin dashboard
+- **Pass Expiry?** → Renew or continue using
+
+---
+
+✅ **Simple Workflow Complete!**
 
