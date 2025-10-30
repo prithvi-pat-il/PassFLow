@@ -1,8 +1,8 @@
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Flask-Bcrypt==1.0.1
-Pillow==10.0.1
-Werkzeug==2.3.7
-qrcode==7.4.2
-twilio==9.2.3
-gunicorn==21.2.0
+Flask
+Flask-SQLAlchemy
+Flask-Bcrypt
+Pillow
+Werkzeug
+qrcode
+twilio
+gunicorn
